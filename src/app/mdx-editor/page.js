@@ -28,6 +28,7 @@ import ReactMarkdown from "react-markdown";
 import { marked } from "marked";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 
 export default function Home() {
   const [markdownState, setMarkdownState] = useState("");
@@ -47,6 +48,12 @@ Hello [world](https://virtuoso.dev/)
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4 pt-10">
+      <div>
+        Document:{" "}
+        <a href="https://mdxeditor.dev/" target="_blank">
+          https://mdxeditor.dev/
+        </a>
+      </div>
       <div className="flex gap-4">
         <button
           className="px-4 py-2 text-white bg-blue-500 rounded-md"
@@ -118,7 +125,9 @@ Hello [world](https://virtuoso.dev/)
           </pre>
           <h1>Markdown preview</h1>
           <div className="p-4 mb-10 border border-gray-300 rounded-md">
-            <Markdown remarkPlugins={[remarkGfm]}>{markdownState}</Markdown>
+            <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+              {markdownState}
+            </ReactMarkdown>
           </div>
         </div>
       ) : (
