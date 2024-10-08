@@ -11,7 +11,6 @@ import {
   codeMirrorPlugin,
   linkDialogPlugin,
   diffSourcePlugin,
-  linkPlugin,
 } from "@mdxeditor/editor";
 import "@mdxeditor/editor/style.css";
 

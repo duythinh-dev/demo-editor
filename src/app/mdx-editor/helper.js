@@ -8,3 +8,7 @@ export async function imageUploadHandler(image) {
   }
   return null;
 }
+
+export function getImageUrl(image) {
+  return URL.createObjectURL(image);
+}

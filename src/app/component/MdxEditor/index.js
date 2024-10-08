@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import { forwardRef } from "react";
-
 const Editor = dynamic(() => import("./InitializedMDXEditor"), {
   ssr: false,
 });

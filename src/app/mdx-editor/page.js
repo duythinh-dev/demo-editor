@@ -25,9 +25,6 @@ import {
 } from "@mdxeditor/editor";
 import { imageUploadHandler } from "./helper";
 import ReactMarkdown from "react-markdown";
-import { marked } from "marked";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 
 export default function Home() {
@@ -61,7 +58,7 @@ Hello [world](https://virtuoso.dev/)
             ref.current?.insertMarkdown("* new markdown to insert")
           }
         >
-          Insert Text to form
+          Insert Text
         </button>
         <button
           className="px-4 py-2 text-white bg-blue-500 rounded-md"
