@@ -28,6 +28,7 @@ import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import FormatAlignJustifyIcon from "@mui/icons-material/FormatAlignJustify";
 import BackupIcon from "@mui/icons-material/Backup";
+import InsertLinkIcon from "@mui/icons-material/InsertLink";
 import {
   Editor,
   Transforms,
@@ -37,6 +38,8 @@ import {
 import { withHistory } from "slate-history";
 import Image from "next/image";
 import { css } from "@emotion/css";
+import { Dialog, DialogContent, DialogTitle, TextField } from "@mui/material";
+import { renderJSONToHTML } from "./helper";
 
 const HOTKEYS = {
   "mod+b": "bold",
@@ -146,6 +149,41 @@ const ImageRender = ({ attributes, children, element }) => {
   );
 };
 
+const ButtonLink = ({ format, icon }) => {
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState("");
+  const editor = useSlate();
+  return (
+    <>
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>Insert Link</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="URL"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
+          <Button
+            onClick={() => {
+              setOpen(false);
+              toggleBlock(editor, format, url);
+            }}
+          >
+            Insert
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Button
+        active={isBlockActive(editor, format)}
+        onClick={() => setOpen(true)}
+      >
+        <Icon>{icon}</Icon>
+      </Button>
+    </>
+  );
+};
+
 const Element = ({ attributes, children, element }) => {
   const style = { textAlign: element.align };
   switch (element.type) {
@@ -186,6 +224,12 @@ const Element = ({ attributes, children, element }) => {
         <ol style={style} {...attributes}>
           {children}
         </ol>
+      );
+    case "link":
+      return (
+        <a {...attributes} href={element.url}>
+          {children}
+        </a>
       );
     default:
       return (
@@ -295,8 +339,7 @@ const initialValue = [
       { text: " text, " },
       { text: "much", italic: true },
       { text: " better than a " },
-      { text: "<textarea>", code: true },
-      { text: "!" },
+      { text: " <div></div> !" },
     ],
   },
   {
@@ -378,6 +421,7 @@ const RichTextExample = ({ onChange }) => {
         <BlockButton format="right" icon={<FormatAlignRightIcon />} />
         <BlockButton format="justify" icon={<FormatAlignJustifyIcon />} />
         <ButtonUpload editor={editor} />
+        {/* <ButtonLink format="link" icon={<InsertLinkIcon />} /> */}
       </Toolbar>
       <Editable
         renderElement={renderElement}
@@ -414,10 +458,16 @@ export default function Page() {
       <div className="p-4 mt-4 border border-gray-300 rounded-md">
         <RichTextExample onChange={handleChange} />
       </div>
-      <div className="mt-4" S>
+      <div className="mt-4">
         <span className="text-xl font-bold text-gray-500 ">Review output:</span>
         <div className="p-4 mt-4 bg-gray-100 rounded-md">
           <pre>{JSON.stringify(value, null, 2)}</pre>
+        </div>
+      </div>
+      <div className="mt-4">
+        <div className="text-xl font-bold text-gray-500">Render as MDX:</div>
+        <div className="p-4 mt-4 bg-gray-100 rounded-md">
+          <div dangerouslySetInnerHTML={{ __html: renderJSONToHTML(value) }} />
         </div>
       </div>
     </div>
