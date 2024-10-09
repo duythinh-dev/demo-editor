@@ -3,7 +3,16 @@
 import { Button, Icon, Toolbar } from "../component/slate";
 import React, { useCallback, useMemo, useState } from "react";
 import isHotkey from "is-hotkey";
-import { Editable, withReact, useSlate, Slate } from "slate-react";
+import {
+  Editable,
+  withReact,
+  useSlate,
+  Slate,
+  useSlateStatic,
+  ReactEditor,
+  useSelected,
+  useFocused,
+} from "slate-react";
 // import icons
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
@@ -18,7 +27,7 @@ import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
 import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import FormatAlignJustifyIcon from "@mui/icons-material/FormatAlignJustify";
-
+import BackupIcon from "@mui/icons-material/Backup";
 import {
   Editor,
   Transforms,
@@ -26,6 +35,8 @@ import {
   Element as SlateElement,
 } from "slate";
 import { withHistory } from "slate-history";
+import Image from "next/image";
+import { css } from "@emotion/css";
 
 const HOTKEYS = {
   "mod+b": "bold",
@@ -92,9 +103,54 @@ const isMarkActive = (editor, format) => {
   const marks = Editor.marks(editor);
   return marks ? marks[format] === true : false;
 };
+const ImageRender = ({ attributes, children, element }) => {
+  const editor = useSlateStatic();
+  console.log(editor, element);
+  const path = ReactEditor.findPath(editor, element);
+  const selected = useSelected();
+  const focused = useFocused();
+  return (
+    <div {...attributes}>
+      {children}
+      <div
+        contentEditable={false}
+        className={css`
+          position: relative;
+        `}
+      >
+        <img
+          src={element.url}
+          className={css`
+            display: block;
+            max-width: 100%;
+            max-height: 20em;
+            box-shadow: ${selected && focused ? "0 0 0 3px #B4D5FF" : "none"};
+          `}
+          alt="image"
+        />
+        <Button
+          active
+          onClick={() => Transforms.removeNodes(editor, { at: path })}
+          className={css`
+            display: ${selected && focused ? "inline" : "none"};
+            position: absolute;
+            top: 0.5em;
+            left: 0.5em;
+            background-color: white;
+          `}
+        >
+          <Icon>delete</Icon>
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const Element = ({ attributes, children, element }) => {
   const style = { textAlign: element.align };
   switch (element.type) {
+    case "image":
+      return <ImageRender {...attributes} element={element} />;
     case "block-quote":
       return (
         <blockquote style={style} {...attributes}>
@@ -172,6 +228,50 @@ const BlockButton = ({ format, icon }) => {
     </Button>
   );
 };
+
+const insertImage = (editor, url) => {
+  const text = { text: "" };
+  const image = { type: "image", url, children: [text] };
+  Transforms.insertNodes(editor, image);
+  Transforms.insertNodes(editor, {
+    type: "paragraph",
+    children: [{ text: "" }],
+  });
+};
+
+const ButtonUpload = ({ editor }) => {
+  console.log(editor);
+  const onChange = (event) => {
+    event.preventDefault();
+    for (const file of event.target.files) {
+      const reader = new FileReader();
+      const [mime] = file.type.split("/");
+      if (mime !== "image") continue;
+
+      reader.onload = (e) => {
+        const src = e.target.result;
+        insertImage(editor, src);
+      };
+      reader.readAsDataURL(file);
+    }
+    event.target.value = null;
+  };
+  return (
+    <Button>
+      <label htmlFor="file-input" className=" image-icon">
+        <BackupIcon fontSize="medium" />
+      </label>
+
+      <input
+        id="file-input"
+        accept="image/*"
+        type="file"
+        hidden
+        onChange={onChange}
+      />
+    </Button>
+  );
+};
 const MarkButton = ({ format, icon }) => {
   const editor = useSlate();
   return (
@@ -221,10 +321,43 @@ const initialValue = [
     children: [{ text: "Try it out for yourself!" }],
   },
 ];
+
+const withImages = (editor) => {
+  const { insertData, isVoid } = editor;
+  editor.isVoid = (element) => {
+    return element.type === "image" ? true : isVoid(element);
+  };
+  editor.insertData = (data) => {
+    const text = data.getData("text/plain");
+    const { files } = data;
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const reader = new FileReader();
+        const [mime] = file.type.split("/");
+        if (mime === "image") {
+          reader.addEventListener("load", () => {
+            const url = reader.result;
+            insertImage(editor, url);
+          });
+          reader.readAsDataURL(file);
+        }
+      }
+    } else if (isImageUrl(text)) {
+      insertImage(editor, text);
+    } else {
+      insertData(data);
+    }
+  };
+  return editor;
+};
+
 const RichTextExample = ({ onChange }) => {
   const renderElement = useCallback((props) => <Element {...props} />, []);
   const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
-  const editor = useMemo(() => withHistory(withReact(createEditor())), []);
+  const editor = useMemo(
+    () => withHistory(withReact(withImages(createEditor()))),
+    []
+  );
 
   // how to get the value of the editor - when onChange is triggered
 
@@ -244,6 +377,7 @@ const RichTextExample = ({ onChange }) => {
         <BlockButton format="center" icon={<FormatAlignCenterIcon />} />
         <BlockButton format="right" icon={<FormatAlignRightIcon />} />
         <BlockButton format="justify" icon={<FormatAlignJustifyIcon />} />
+        <ButtonUpload editor={editor} />
       </Toolbar>
       <Editable
         renderElement={renderElement}
