@@ -2,7 +2,7 @@
 
 import { Button, Icon, Toolbar } from "../component/slate";
 import React, { useCallback, useMemo, useState } from "react";
-import isHotkey from "is-hotkey";
+import isHotkey, { isKeyHotkey } from "is-hotkey";
 import {
   Editable,
   withReact,
@@ -13,6 +13,7 @@ import {
   useSelected,
   useFocused,
 } from "slate-react";
+import isUrl from "is-url";
 // import icons
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
@@ -29,11 +30,15 @@ import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import FormatAlignJustifyIcon from "@mui/icons-material/FormatAlignJustify";
 import BackupIcon from "@mui/icons-material/Backup";
 import InsertLinkIcon from "@mui/icons-material/InsertLink";
+import AddLinkIcon from "@mui/icons-material/AddLink";
+import LinkOffIcon from "@mui/icons-material/LinkOff";
+
 import {
   Editor,
   Transforms,
   createEditor,
   Element as SlateElement,
+  Range,
 } from "slate";
 import { withHistory } from "slate-history";
 import Image from "next/image";
@@ -339,7 +344,7 @@ const initialValue = [
       { text: " text, " },
       { text: "much", italic: true },
       { text: " better than a " },
-      { text: " <div></div> !" },
+      { text: "<div></div> ! !" },
     ],
   },
   {
@@ -394,11 +399,130 @@ const withImages = (editor) => {
   return editor;
 };
 
+const unwrapLink = (editor) => {
+  Transforms.unwrapNodes(editor, {
+    match: (n) =>
+      !Editor.isEditor(n) && SlateElement.isElement(n) && n.type === "link",
+  });
+};
+
+const isLinkActive = (editor) => {
+  const [link] = Editor.nodes(editor, {
+    match: (n) =>
+      !Editor.isEditor(n) && SlateElement.isElement(n) && n.type === "link",
+  });
+  return !!link;
+};
+
+const wrapLink = (editor, url) => {
+  if (isLinkActive(editor)) {
+    unwrapLink(editor);
+  }
+  const { selection } = editor;
+  const isCollapsed = selection && Range.isCollapsed(selection);
+  const link = {
+    type: "link",
+    url,
+    children: isCollapsed ? [{ text: url }] : [],
+  };
+  if (isCollapsed) {
+    Transforms.insertNodes(editor, link);
+  } else {
+    Transforms.wrapNodes(editor, link, { split: true });
+    Transforms.collapse(editor, { edge: "end" });
+  }
+};
+
+const withInlines = (editor) => {
+  const { insertData, insertText, isInline, isElementReadOnly, isSelectable } =
+    editor;
+  editor.isInline = (element) =>
+    ["link", "button", "badge"].includes(element.type) || isInline(element);
+  editor.isElementReadOnly = (element) =>
+    element.type === "badge" || isElementReadOnly(element);
+  editor.isSelectable = (element) =>
+    element.type !== "badge" && isSelectable(element);
+  editor.insertText = (text) => {
+    if (text && isUrl(text)) {
+      wrapLink(editor, text);
+    } else {
+      insertText(text);
+    }
+  };
+  editor.insertData = (data) => {
+    const text = data.getData("text/plain");
+    if (text && isUrl(text)) {
+      wrapLink(editor, text);
+    } else {
+      insertData(data);
+    }
+  };
+  return editor;
+};
+
+const insertLink = (editor, url) => {
+  if (editor.selection) {
+    wrapLink(editor, url);
+  }
+};
+
+const AddLinkButton = () => {
+  const editor = useSlate();
+  return (
+    <Button
+      active={isLinkActive(editor)}
+      onMouseDown={(event) => {
+        event.preventDefault();
+        const url = window.prompt("Enter the URL of the link:");
+        if (!url) return;
+        insertLink(editor, url);
+      }}
+    >
+      <AddLinkIcon />
+    </Button>
+  );
+};
+
+const RemoveLinkButton = () => {
+  const editor = useSlate();
+  return (
+    <Button
+      active={isLinkActive(editor)}
+      onMouseDown={(event) => {
+        if (isLinkActive(editor)) {
+          unwrapLink(editor);
+        }
+      }}
+    >
+      <LinkOffIcon />
+    </Button>
+  );
+};
+
+const ToggleEditableButtonButton = () => {
+  const editor = useSlate();
+  return (
+    <Button
+      active
+      onMouseDown={(event) => {
+        event.preventDefault();
+        if (isButtonActive(editor)) {
+          unwrapButton(editor);
+        } else {
+          insertButton(editor);
+        }
+      }}
+    >
+      <Icon>smart_button</Icon>
+    </Button>
+  );
+};
+
 const RichTextExample = ({ onChange }) => {
   const renderElement = useCallback((props) => <Element {...props} />, []);
   const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
   const editor = useMemo(
-    () => withHistory(withReact(withImages(createEditor()))),
+    () => withInlines(withHistory(withReact(withImages(createEditor())))),
     []
   );
 
@@ -421,6 +545,9 @@ const RichTextExample = ({ onChange }) => {
         <BlockButton format="right" icon={<FormatAlignRightIcon />} />
         <BlockButton format="justify" icon={<FormatAlignJustifyIcon />} />
         <ButtonUpload editor={editor} />
+        <AddLinkButton />
+        <RemoveLinkButton />
+        {/* <ToggleEditableButtonButton /> */}
         {/* <ButtonLink format="link" icon={<InsertLinkIcon />} /> */}
       </Toolbar>
       <Editable
@@ -430,11 +557,25 @@ const RichTextExample = ({ onChange }) => {
         spellCheck
         autoFocus
         onKeyDown={(event) => {
+          const { selection } = editor;
           for (const hotkey in HOTKEYS) {
             if (isHotkey(hotkey, event)) {
               event.preventDefault();
               const mark = HOTKEYS[hotkey];
               toggleMark(editor, mark);
+            }
+          }
+          if (selection && Range.isCollapsed(selection)) {
+            const { nativeEvent } = event;
+            if (isKeyHotkey("left", nativeEvent)) {
+              event.preventDefault();
+              Transforms.move(editor, { unit: "offset", reverse: true });
+              return;
+            }
+            if (isKeyHotkey("right", nativeEvent)) {
+              event.preventDefault();
+              Transforms.move(editor, { unit: "offset" });
+              return;
             }
           }
         }}
@@ -448,6 +589,8 @@ export default function Page() {
   const handleChange = (value) => {
     setValue(value);
   };
+
+  console.log(renderJSONToHTML(value));
   return (
     <div className="max-w-3xl py-4 m-auto">
       <h1 className="text-2xl font-bold">Slate Editor</h1>

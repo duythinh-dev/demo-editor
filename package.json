@@ -17,6 +17,7 @@
     "@mui/material": "^6.1.2",
     "emotion-icons": "^3.27.0",
     "is-hotkey": "^0.2.0",
+    "is-url": "^1.2.4",
     "marked": "^14.1.2",
     "next": "14.2.13",
     "react": "^18",
