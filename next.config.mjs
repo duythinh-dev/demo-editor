@@ -3,6 +3,14 @@ const nextConfig = {
   reactStrictMode: false,
   transpilePackages: ["@mdxeditor/editor"],
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdn.jsdelivr.net",
+      },
+    ],
+  },
   webpack: (config) => {
     // this will override the experiments
     config.experiments = { ...config.experiments, topLevelAwait: true };
