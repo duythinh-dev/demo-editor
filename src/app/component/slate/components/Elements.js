@@ -147,7 +147,12 @@ const ImageRender = ({ attributes, children, element, editor }) => {
 const VideoElement = ({ attributes, children, element }) => {
   const editor = useSlateStatic();
   const { url } = element;
+
   const safeUrl = useMemo(() => {
+    if (url.startsWith("data:video/")) {
+      // Handle base64 video URLs directly
+      return url;
+    }
     let parsedUrl = null;
     try {
       parsedUrl = new URL(url);
@@ -181,36 +186,51 @@ const VideoElement = ({ attributes, children, element }) => {
   return (
     <div {...attributes}>
       <div contentEditable={false}>
-        <div
-          style={{
-            padding: "75% 0 0 0",
-            position: "relative",
-          }}
-        >
-          <iframe
-            src={`${safeUrl}?title=0&byline=0&portrait=0`}
-            frameBorder="0"
+        {url.startsWith("data:video/") ? (
+          <video
+            controls
+            src={safeUrl}
             style={{
-              position: "absolute",
-              top: "0",
-              left: "0",
               width: "100%",
-              height: "100%",
+              height: "auto",
             }}
           />
-        </div>
-        <UrlInput
-          url={url}
-          onChange={(val) => {
-            const path = ReactEditor.findPath(editor, element);
-            const newProperties = {
-              url: val,
-            };
-            Transforms.setNodes(editor, newProperties, {
-              at: path,
-            });
-          }}
-        />
+        ) : (
+          <div
+            style={{
+              padding: "75% 0 0 0",
+              position: "relative",
+            }}
+          >
+            <iframe
+              src={`${safeUrl}?title=0&byline=0&portrait=0`}
+              frameBorder="0"
+              style={{
+                position: "absolute",
+                top: "0",
+                left: "0",
+                width: "100%",
+                height: "100%",
+              }}
+            />
+          </div>
+        )}
+        {url.startsWith("data:video/") ? (
+          ""
+        ) : (
+          <UrlInput
+            url={url}
+            onChange={(val) => {
+              const path = ReactEditor.findPath(editor, element);
+              const newProperties = {
+                url: val,
+              };
+              Transforms.setNodes(editor, newProperties, {
+                at: path,
+              });
+            }}
+          />
+        )}
       </div>
       {children}
     </div>

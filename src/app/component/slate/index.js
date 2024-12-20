@@ -165,6 +165,7 @@ const RichTextExample = ({ onChange, initialValue }) => {
             const { nativeEvent } = event;
             if (isKeyHotkey("left", nativeEvent)) {
               event.preventDefault();
+
               Transforms.move(editor, { unit: "offset", reverse: true });
               return;
             }

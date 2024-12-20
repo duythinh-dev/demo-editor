@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useSlate } from "slate-react";
 import { isBlockActive, isMarkActive, toggleBlock, toggleMark } from "../utils";
 import BackupIcon from "@mui/icons-material/Backup";
 import LinkOffIcon from "@mui/icons-material/LinkOff";
 import AddLinkIcon from "@mui/icons-material/AddLink";
+import VideoCallIcon from "@mui/icons-material/VideoCall";
 import { insertLink, isLinkActive, unwrapLink } from "../utils/linkUtils";
 import { Button, Icon } from "../element";
-import { insertEmoji, insertImage } from "../utils/insertElement";
+import { insertEmoji, insertImage, insertVideo } from "../utils/insertElement";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import IconButton from "@mui/material/IconButton";
 import Popover from "@mui/material/Popover";
@@ -71,6 +72,42 @@ export const ButtonUpload = ({ editor }) => {
         onChange={onChange}
       />
     </Button>
+  );
+};
+
+export const ButtonUploadVideo = ({ editor }) => {
+  const inputRef = useRef(null);
+  const onChange = (event) => {
+    event.preventDefault();
+    for (const file of event.target.files) {
+      const reader = new FileReader();
+      const [mime] = file.type.split("/");
+      if (mime !== "video") continue;
+
+      reader.onload = (e) => {
+        const src = e.target.result;
+        insertVideo(editor, src);
+      };
+      reader.readAsDataURL(file);
+    }
+    inputRef.current.value = null;
+  };
+  return (
+    <>
+      <Button>
+        <label htmlFor="file-input-video" className=" image-icon">
+          <VideoCallIcon fontSize="medium" />
+        </label>
+        <input
+          ref={inputRef}
+          id="file-input-video"
+          accept="video/mp4,video/x-m4v,video/*"
+          type="file"
+          hidden
+          onChange={onChange}
+        />
+      </Button>
+    </>
   );
 };
 

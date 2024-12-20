@@ -37,6 +37,7 @@ import {
   AddLinkButton,
   BlockButton,
   ButtonUpload,
+  ButtonUploadVideo,
   EmojiButton,
   MarkButton,
   RemoveLinkButton,
@@ -61,6 +62,7 @@ const Toolbar = ({ editor }) => {
         <BlockButton format="justify" icon={<FormatAlignJustifyIcon />} />
         <EmojiButton editor={editor} />
         <ButtonUpload editor={editor} />
+        <ButtonUploadVideo editor={editor} />
         <AddLinkButton />
         <RemoveLinkButton />
       </SlateToolbar>

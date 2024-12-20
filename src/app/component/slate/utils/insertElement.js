@@ -19,3 +19,13 @@ export const insertImage = (editor, url) => {
     children: [{ text: "" }],
   });
 };
+
+export const insertVideo = (editor, url) => {
+  const text = { text: "" };
+  const video = { type: "video", url, children: [text] };
+  Transforms.insertNodes(editor, video);
+  Transforms.insertNodes(editor, {
+    type: "paragraph",
+    children: [{ text: "" }],
+  });
+};
