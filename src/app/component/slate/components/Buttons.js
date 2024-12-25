@@ -1,10 +1,10 @@
 import React, { useRef } from "react";
 import { useSlate } from "slate-react";
 import { isBlockActive, isMarkActive, toggleBlock, toggleMark } from "../utils";
-import BackupIcon from "@mui/icons-material/Backup";
 import LinkOffIcon from "@mui/icons-material/LinkOff";
 import AddLinkIcon from "@mui/icons-material/AddLink";
 import VideoCallIcon from "@mui/icons-material/VideoCall";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import { insertLink, isLinkActive, unwrapLink } from "../utils/linkUtils";
 import { Button, Icon } from "../element";
 import { insertEmoji, insertImage, insertVideo } from "../utils/insertElement";
@@ -62,7 +62,7 @@ export const ButtonUpload = ({ editor }) => {
   return (
     <Button>
       <label htmlFor="file-input" className=" image-icon">
-        <BackupIcon fontSize="medium" />
+        <AddPhotoAlternateIcon fontSize="medium" />
       </label>
       <input
         id="file-input"

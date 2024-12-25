@@ -23,6 +23,7 @@ import { Portal } from "./element";
 import { toggleMark } from "./utils";
 import Toolbar from "./components/Toolbar";
 import { withEmoji } from "./utils/withEmoji";
+import { insertImage } from "./utils/insertElement";
 
 const RichTextExample = ({ onChange, initialValue }) => {
   const ref = useRef();

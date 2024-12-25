@@ -147,7 +147,7 @@ const ImageRender = ({ attributes, children, element, editor }) => {
 const VideoElement = ({ attributes, children, element }) => {
   const editor = useSlateStatic();
   const { url } = element;
-
+  const path = ReactEditor.findPath(editor, element);
   const safeUrl = useMemo(() => {
     if (url.startsWith("data:video/")) {
       // Handle base64 video URLs directly
@@ -185,7 +185,26 @@ const VideoElement = ({ attributes, children, element }) => {
 
   return (
     <div {...attributes}>
-      <div contentEditable={false}>
+      <div
+        contentEditable={false}
+        className={css`
+          position: relative;
+        `}
+      >
+        <IconButton
+          active
+          onClick={() => Transforms.removeNodes(editor, { at: path })}
+          className={css`
+            position: absolute;
+            top: 0.5em;
+            right: 0.5em;
+            background-color: white;
+            z-index: 1000;
+          `}
+          size="small"
+        >
+          <CloseIcon />
+        </IconButton>
         {url.startsWith("data:video/") ? (
           <video
             controls

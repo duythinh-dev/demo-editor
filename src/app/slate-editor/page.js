@@ -40,11 +40,6 @@ const initialValue = [
     align: "center",
     children: [{ text: "Try it out for yourself!" }],
   },
-  {
-    type: "video",
-    url: "https://player.vimeo.com/video/26689853",
-    children: [{ text: "" }],
-  },
 ];
 export default function Page() {
   const [value, setValue] = useState(initialValue);

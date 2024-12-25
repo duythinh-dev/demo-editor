@@ -7,33 +7,33 @@ export const withHashtags = (editor) => {
   editor.normalizeNode = (entry) => {
     const [node, path] = entry;
 
-    // Only process text nodes
+    // Chỉ xử lý các nút văn bản
     if (!Text.isText(node)) {
       return normalizeNode(entry);
     }
 
-    // Get the current text content
+    // Lấy nội dung văn bản hiện tại
     const text = node.text;
 
-    // Find all hashtags in the text
+    // Tìm tất cả các hashtag trong văn bản
     const matches = Array.from(text.matchAll(/#\w+/g));
 
-    // If no hashtags or the node is already properly formatted, continue normalization
+    // Nếu không có hashtag hoặc nút đã được định dạng đúng, tiếp tục chuẩn hóa
     if (matches.length === 0) {
-      // Clear hashtag formatting if there's no hashtag
+      // Xóa định dạng hashtag nếu không có hashtag
       if (node.hashtag) {
         Transforms.setNodes(editor, { hashtag: false }, { at: path });
       }
       return normalizeNode(entry);
     }
 
-    // Process each match, starting from the last one to avoid offset issues
+    // Xử lý từng kết quả khớp, bắt đầu từ kết quả cuối cùng để tránh vấn đề về độ lệch
     for (let i = matches.length - 1; i >= 0; i--) {
       const match = matches[i];
       const start = match.index;
       const end = start + match[0].length;
 
-      // Split the text and apply hashtag formatting only to the hashtag part
+      // Tách văn bản và áp dụng định dạng hashtag chỉ cho phần hashtag
       Transforms.splitNodes(editor, {
         at: { path, offset: end },
         match: Text.isText,
