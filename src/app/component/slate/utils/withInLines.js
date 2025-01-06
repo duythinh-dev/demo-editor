@@ -20,10 +20,11 @@ export const withInLines = (editor) => {
   };
   editor.insertData = (data) => {
     const text = data.getData("text/plain");
+    console.log("text", text);
     if (text && isUrl(text)) {
       wrapLink(editor, text);
     } else {
-      insertData(data);
+      insertText(text);
     }
   };
   return editor;

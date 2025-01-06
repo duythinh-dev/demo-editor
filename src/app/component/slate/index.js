@@ -68,6 +68,7 @@ const RichTextExample = ({ onChange, initialValue }) => {
 
   const onKeyDown = useCallback(
     (event) => {
+      console.log("event", event);
       if (target && chars.length > 0) {
         switch (event.key) {
           case "ArrowDown":
