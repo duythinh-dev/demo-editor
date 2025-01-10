@@ -1,0 +1,11 @@
+.ql-picker-options [data-value="yellow"]::before {
+  background-color: yellow;
+}
+
+.ql-picker-options [data-value="green"]::before {
+  background-color: green;
+}
+
+.ql-picker-options [data-value="blue"]::before {
+  background-color: blue;
+}

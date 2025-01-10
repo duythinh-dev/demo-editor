@@ -9,6 +9,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "cdn.jsdelivr.net",
       },
+      {
+        protocol: "https",
+        hostname: "freeimage.host",
+      },
+      {
+        protocol: "https",
+        hostname: "cors-anywhere.herokuapp.com",
+      },
     ],
   },
   webpack: (config) => {
